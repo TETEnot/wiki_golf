@@ -9,7 +9,9 @@ import { useEffect, useState } from "react";
 
 export default  function Home() {
 
-  // テストテスト
+  //kokoko
+
+  // テストテストeadsdad
 
   const searchUrl = 'https://ja.wikipedia.org/w/api.php?origin=*&action=query&prop=links&format=json&list=backlinks&bllimit=50&bltitle=' 
   const [text, setText] = useState("");
