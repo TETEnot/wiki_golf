@@ -19,7 +19,11 @@ export default  function Home() {
   const [text, setText] = useState("");
   const [addText, setAddText] = useState("");
   const [flag, setFlag] = useState(false);
+  const [shot, setShot] = useState(false);
   const [listWiki, setListWiki] = useState("");
+  const [random, setRamdom] = useState(false);
+
+  var wikipedias = "";
 
   useEffect(() => {
     setAddText("");
@@ -39,7 +43,7 @@ export default  function Home() {
       // console.log(wikiPedia);
 
       if(!wikiPedia){
-        alert("エラーが出ました。")
+        // alert("エラーが出ました。")
         return false;
       }
       if (!wikiPedia.query.backlinks){ return false; }
@@ -115,6 +119,95 @@ export default  function Home() {
     }
   }, [displayValue]);
 
+
+  useEffect(() => {
+    setAddText("");
+    setAddText(text);
+    
+    async function fetchRandom() {
+
+      var URL = "https://ja.wikipedia.org/w/api.php?origin=*&action=query&prop=links&format=json&list=random"
+      // console.log(URL);
+      var wikiPedia: any = await fetch(URL,{
+        method: 'GET',
+      }).then((response) => {
+            return response.json();
+        }).catch(() => {
+          alert("wikipediaにアクセスできません");
+        });
+      console.log(wikiPedia);
+
+      if(!wikiPedia){
+        alert("エラーが出ました。")
+        return false;
+      }
+      if (!wikiPedia.query.random){ return false; }
+      let wikipedias: any = wikiPedia.query.random[0].title;
+      
+      if( wikipedias.indexOf(':') != -1) {
+        var URL = "https://ja.wikipedia.org/w/api.php?origin=*&action=query&prop=links&format=json&list=random"
+        // console.log(URL);
+        var wikiPedia: any = await fetch(URL,{
+          method: 'GET',
+        }).then((response) => {
+              return response.json();
+          }).catch(() => {
+            alert("wikipediaにアクセスできません");
+          });
+        console.log(wikiPedia);
+  
+        if(!wikiPedia){
+          alert("エラーが出ました。")
+          return false;
+        }
+        if (!wikiPedia.query.random){ return false; }
+        let wikipedias: any = wikiPedia.query.random[0].title;
+      }else {
+        setText(wikipedias);
+      }
+      
+
+    //   setListWiki(wikipedias.map((wiki:any) => (
+    //   <li key={wiki.pageid} ><button type="button" onClick={ () => {
+
+    //     window.scroll({
+    //       top: 0,
+    //       behavior: "smooth",
+    //     });
+
+    //     // async function fetchUpdate() {
+    //     //   setText("");
+    //     // setText(wiki.title);
+    //     // console.log("更新された値：" + text)
+
+    //     // var URL = searchUrl + text;
+
+    //     // console.log(URL);
+    //     // var wikiPedia = await fetch(URL,{
+    //     //   method: 'GET',
+    //     // }).then((response) => {
+    //     //   return response.json();
+    //     // }).catch(() => {
+    //     //   alert("wikipediaにアクセスで��せん");
+    //     // });
+    //     // console.log(wikiPedia);
+
+    //     // }
+    //     // fetchUpdate();
+    //   }}>{wiki.title}</button></li>
+    // )));
+    // if (text == displayValue) {
+    //   // alert("おめでとうございます");
+    //   window.location.reload();
+    // }
+    }
+    fetchRandom();
+    
+
+  },[random]);
+
+  
+
   return (
     <>
     <>
@@ -131,17 +224,17 @@ export default  function Home() {
                   
                     {/* <Wikigolflayoout></Wikigolflayoout> */}
                   
-                  <h1 className=" text-white sm:text-4xl md:text-5xl lg:text-6xl/none text-3xl"><span className=" text-gray-400">ゴール：</span>{displayValue}</h1>
+                  <h1 className=" text-white sm:text-4xl md:text-5xl lg:text-6xl/none text-3xl"><span className=" text-gray-400"></span>{displayValue}</h1>
     <div className="flex">
-      <input className="block p-2.5 w-full z-20 text-sm text-gray-900 bg-gray-50 rounded-e-lg rounded-s-gray-100 rounded-s-2 border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:border-blue-500"  type="text" value={inputValue} onChange={handleInputChange} disabled={buttonClicked}/>
+      <input className="block p-2.5 w-full z-20 text-sm text-gray-900 bg-gray-50 rounded-e-lg rounded-s-gray-100 rounded-s-2 border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:border-blue-500"  type="text" value={inputValue} onChange={handleInputChange} disabled={buttonClicked} />
       
       <Button
-        className="border-green-400 text-green-400 hover:bg-green-400 hover:text-black"
+        className="bg-green-400 hover:bg-green-500 text-black"
         variant="secondary"
         onClick={handleButtonClick}
         disabled={buttonClicked}
       >
-        Learn More
+        決定
       </Button>
     </div>
 
@@ -151,21 +244,27 @@ export default  function Home() {
                 </div>
 
                 <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl lg:text-6xl/none text-green-400 dark:text-green-300">
-                  <span className=" text-gray-400">単語：</span>{addText}
+                  <span className=" text-gray-400"></span>{addText}
                 </h1>
+                <div className="flex gap-4">
                 <p className=" text-white ">
-                  単語：<input id="input" className=" text-black" value={text} onChange={(event) => setText(event.target.value)} placeholder="太宰治"/>
+                  <input id="input" className=" block p-2.5 w-full z-20 text-sm text-gray-900 bg-gray-50 rounded-e-lg rounded-s-gray-100 rounded-s-2 border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:border-blue-500" value={text} onChange={(event) => setText(event.target.value)} placeholder="太宰治"/>
                 </p>
                 
-                <div className="flex gap-4">
-                  <Button className="bg-green-400 hover:bg-green-500 text-black" variant="default" onClick={() => setFlag((start) => !start)}>
-                    Play Now
+                
+                  <Button 
+                    className="bg-green-400 hover:bg-green-500 text-black" 
+                    variant="default" 
+                    onClick={() => setFlag((start) => !start)}
+                  >
+                    shot
                   </Button>
                   <Button
                     className="border-green-400 text-green-400 hover:bg-green-400 hover:text-black"
                     variant="secondary"
+                    onClick={() => setRamdom((shot) => !shot)}
                   >
-                    Learn More
+                    random
                   </Button>
                   
                     
