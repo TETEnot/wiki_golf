@@ -1,510 +1,257 @@
-'use client'
-
-'use client'
+'use client';
 
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import Link from "next/link"
-import { CardContent, Card } from "@/components/ui/card"
-import { useEffect, useState } from "react";
+import Link from "next/link";
+import { CardContent, Card } from "@/components/ui/card";
+import { useEffect, useState, ChangeEvent } from "react";
+import Header from "@/components/Header"; // ヘッダーコンポーネントをインポート
 
+export default function Home() {
+    const searchUrl = 'https://ja.wikipedia.org/w/api.php?origin=*&action=query&prop=links&format=json&list=backlinks&bllimit=50&bltitle=';
+    const [text, setText] = useState("");
+    const [inputValue, setInputValue] = useState<string>("");
+    const [isGoalSet, setIsGoalSet] = useState<boolean>(false);
+    const [isShotSet, setIsShotSet] = useState<boolean>(false);
+    const [goal, setGoal] = useState<string>("");
+    const [shotHistory, setShotHistory] = useState<string[]>([]);
+    const [goalAchieved, setGoalAchieved] = useState<boolean>(false);
+    const [listWiki, setListWiki] = useState<JSX.Element[]>([]);
 
-export default  function Home() {
-
-  //kokoko
-
-  // テストテストeadsdad
-
-  const searchUrl = 'https://ja.wikipedia.org/w/api.php?origin=*&action=query&prop=links&format=json&list=backlinks&bllimit=50&bltitle=' 
-  const [text, setText] = useState("");
-  const [addText, setAddText] = useState("");
-  const [flag, setFlag] = useState(false);
-  const [shot, setShot] = useState(false);
-  const [listWiki, setListWiki] = useState("");
-  const [random, setRamdom] = useState(false);
-
-  var wikipedias = "";
-
-  useEffect(() => {
-    setAddText("");
-    setAddText(text);
-    // console.log("テスト；"+text);
-    
-    async function fetchTodos() {
-      var URL = searchUrl + text;
-      // console.log(URL);
-      var wikiPedia: any = await fetch(URL,{
-        method: 'GET',
-      }).then((response) => {
-            return response.json();
-        }).catch(() => {
-          alert("wikipediaにアクセスできません");
-        });
-      // console.log(wikiPedia);
-
-      if(!wikiPedia){
-        // alert("エラーが出ました。")
-        return false;
-      }
-      if (!wikiPedia.query.backlinks){ return false; }
-      let wikipedias: any = wikiPedia.query.backlinks;
-      
-      // var wikiJson = JSON.stringify(wikiPedia); 
-      // let wikiString = JSON.parse(wikiJson);
-      // console.log(wikiString[0])
-      // console.log(wikiString.query.backlinks);
-
-      setListWiki(wikipedias.map((wiki:any) => (
-      <li key={wiki.pageid} ><button type="button" onClick={ () => {
-
-        window.scroll({
-          top: 0,
-          behavior: "smooth",
-        });
-
-        async function fetchUpdate() {
-          setText("");
-        setText(wiki.title);
-        console.log("更新された値：" + text)
-
-        var URL = searchUrl + text;
-        console.log(URL);
-        var wikiPedia = await fetch(URL,{
-          method: 'GET',
-        }).then((response) => {
-          return response.json();
-        }).catch(() => {
-          alert("wikipediaにアクセスで��せん");
-        });
-        console.log(wikiPedia);
-
+    const handleGoalSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (inputValue.trim() === '') {
+            alert('ゴールを入力してください。');
+            return;
         }
-        fetchUpdate();
-      }}>{wiki.title}</button></li>
-    )));
-    if (text == displayValue) {
-      alert("おめでとうございます");
-      window.location.reload();
-    }
-    }
-    fetchTodos();
-    
-    
+        setGoal(inputValue);
+        setIsGoalSet(true); // ゴールを確定
+        setInputValue(''); // 入力フィールドをクリア
+    };
 
-  },[flag]);
-  
-  const [inputValue, setInputValue] = useState('');
-  const [displayValue, setDisplayValue] = useState('');
-  const [buttonClicked, setButtonClicked] = useState(false);
+    const handleShotSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (inputValue.trim() === '') {
+            alert('ショットを入力してください。');
+            return;
+        }
+        setShotHistory((prevHistory) => [...prevHistory, inputValue]); // ショット履歴に追加
+        setIsShotSet(true); // ショットを確定
+        setInputValue(''); // 入力フィールドをクリア
 
-  const handleInputChange = (event: any) => {
-    setInputValue(event.target.value);
-    console.log(displayValue);
-  };
+        // ここで関連単語を取得するためのAPIリクエストを行う
+        fetchRelatedWords(inputValue);
+    };
 
-  const handleButtonClick = () => {
-
-    if (inputValue.trim() === '') {
-      alert('入力フィールドが空です。値を入力してください。');
-      return;
-    }
-
-    setDisplayValue(inputValue);
-    setButtonClicked(true); 
-  };
-
-  useEffect(() => {
-    if (buttonClicked) {
-      console.log(displayValue); 
-    }
-  }, [displayValue]);
-
-
-  useEffect(() => {
-    setAddText("");
-    setAddText(text);
-    
-    async function fetchRandom() {
-
-      var URL = "https://ja.wikipedia.org/w/api.php?origin=*&action=query&prop=links&format=json&list=random"
-      // console.log(URL);
-      var wikiPedia: any = await fetch(URL,{
-        method: 'GET',
-      }).then((response) => {
+    const fetchRelatedWords = async (shotWord: string) => {
+        const URL = searchUrl + shotWord;
+        const wikiPedia: any = await fetch(URL, {
+            method: 'GET',
+        }).then((response) => {
             return response.json();
         }).catch(() => {
-          alert("wikipediaにアクセスできません");
-        });
-      console.log(wikiPedia);
-
-      if(!wikiPedia){
-        alert("エラーが出ました。")
-        return false;
-      }
-      if (!wikiPedia.query.random){ return false; }
-      let wikipedias: any = wikiPedia.query.random[0].title;
-      if( wikipedias.indexOf(':') != -1) {
-        var URL = "https://ja.wikipedia.org/w/api.php?origin=*&action=query&prop=links&format=json&list=random"
-        // console.log(URL);
-        var wikiPedia: any = await fetch(URL,{
-          method: 'GET',
-        }).then((response) => {
-              return response.json();
-          }).catch(() => {
             alert("wikipediaにアクセスできません");
-          });
-        console.log(wikiPedia);
-  
-        if(!wikiPedia){
-          alert("エラーが出ました。")
-          return false;
+        });
+
+        if (!wikiPedia || !wikiPedia.query || !wikiPedia.query.backlinks) {
+            alert("エラーが出ました。");
+            return;
         }
-        if (!wikiPedia.query.random){ return false; }
-        let wikipedias: any = wikiPedia.query.random[0].title;
-      }else {
-        setText(wikipedias);
-      }
-      
 
-    //   setListWiki(wikipedias.map((wiki:any) => (
-    //   <li key={wiki.pageid} ><button type="button" onClick={ () => {
+        const wikipedias: any = wikiPedia.query.backlinks;
 
-    //     window.scroll({
-    //       top: 0,
-    //       behavior: "smooth",
-    //     });
+        if (!Array.isArray(wikipedias)) {
+            alert("関連単語が見つかりませんでした。");
+            return;
+        }
 
-    //     // async function fetchUpdate() {
-    //     //   setText("");
-    //     // setText(wiki.title);
-    //     // console.log("更新された値：" + text)
+        // 「:」を含む単語を除外
+        const filteredWikipedias = wikipedias.filter((wiki: any) => !wiki.title.includes(':'));
 
-    //     // var URL = searchUrl + text;
+        setListWiki(filteredWikipedias.map((wiki: any) => (
+            <li key={wiki.pageid}>
+                <button type="button" onClick={() => handleShotButtonClick(wiki.title)}>
+                    {wiki.title}
+                </button>
+            </li>
+        )));
+    };
 
-    //     // console.log(URL);
-    //     // var wikiPedia = await fetch(URL,{
-    //     //   method: 'GET',
-    //     // }).then((response) => {
-    //     //   return response.json();
-    //     // }).catch(() => {
-    //     //   alert("wikipediaにアクセスで��せん");
-    //     // });
-    //     // console.log(wikiPedia);
+    const handleShotButtonClick = (wikiTitle: string) => {
+        setText(wikiTitle);
+        setShotHistory((prevHistory) => [...prevHistory, wikiTitle]); // 選択した単語を履歴に追加
+        if (wikiTitle === goal) {
+            setGoalAchieved(true); // ゴール達成
+        }
+    };
 
-    //     // }
-    //     // fetchUpdate();
-    //   }}>{wiki.title}</button></li>
-    // )));
-    // if (text == displayValue) {
-    //   // alert("おめでとうございます");
-    //   window.location.reload();
-    // }
-    }
-    fetchRandom();
-    
+    const fetchRandomWord = async () => {
+        const URL = "https://ja.wikipedia.org/w/api.php?origin=*&action=query&list=random&rnlimit=1&format=json";
+        let randomWord = "";
+        let isValidWord = false;
 
-  },[random]);
+        while (!isValidWord) {
+            const response = await fetch(URL);
+            const data = await response.json();
+            randomWord = data.query.random[0].title; // ランダムな単語を取得
 
-  
+            // 「:」を含まない単語かどうかをチェック
+            if (!randomWord.includes(':')) {
+                isValidWord = true; // 有効な単語が見つかった
+            }
+        }
 
-  return (
-    <>
-    <>
-      <section className="w-full py-12 md:py-24 lg:py-32 xl:py-48 bg-black dark:bg-gray-950 h-screen">
-        <div className=" container px-4 md:px-6">
-          <div className="grid items-center gap-6 lg:grid-cols-[1fr_650px] lg:gap-12 xl:grid-cols-[1fr_750px]">
-            <div className="flex flex-col justify-center space-y-4">
-              <div className="space-y-2">
+        if (!isGoalSet) {
+            setInputValue(randomWord); // ゴールの単語を設定
+        } else {
+            setInputValue(randomWord); // スタートの単語を設定
+        }
+    };
 
-                <div>
+    useEffect(() => {
+        async function fetchTodos() {
+            if (!text) {
+                return;
+            }
 
+            const URL = searchUrl + text;
+            const wikiPedia: any = await fetch(URL, {
+                method: 'GET',
+            }).then((response) => {
+                return response.json();
+            }).catch(() => {
+                alert("wikipediaにアクセスできません");
+            });
 
-                <form>
-                  
-                    {/* <Wikigolflayoout></Wikigolflayoout> */}
-                  
-                  <h1 className=" text-white sm:text-4xl md:text-5xl lg:text-6xl/none text-3xl"><span className=" text-gray-400"></span>{displayValue}</h1>
-    <div className="flex">
-      <input className="block p-2.5 w-full z-20 text-sm text-gray-900 bg-gray-50 rounded-e-lg rounded-s-gray-100 rounded-s-2 border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:border-blue-500"  type="text" value={inputValue} onChange={handleInputChange} disabled={buttonClicked} />
-      
-      <Button
-        className="bg-green-400 hover:bg-green-500 text-black"
-        variant="secondary"
-        onClick={handleButtonClick}
-        disabled={buttonClicked}
-      >
-        決定
-      </Button>
-    </div>
+            if (!wikiPedia || !wikiPedia.query || !wikiPedia.query.backlinks) {
+                alert("エラーが出ました。");
+                return;
+            }
 
-              </form>
+            const wikipedias: any = wikiPedia.query.backlinks;
 
+            if (!Array.isArray(wikipedias)) {
+                alert("関連単語が見つかりませんでした。");
+                return;
+            }
 
+            setListWiki(wikipedias.map((wiki: any) => (
+                <li key={wiki.pageid}>
+                    <button type="button" onClick={() => handleShotButtonClick(wiki.title)}>
+                        {wiki.title}
+                    </button>
+                </li>
+            )));
+        }
+        fetchTodos();
+    }, [text]);
+
+    return (
+        <>
+            <section className="w-full py-24 bg-black min-h-screen pt-32">
+                <div className="container mx-auto max-w-4xl px-4 md:px-6">
+                    <Header
+                        onChangeGoal={() => {
+                            setIsGoalSet(false);
+                            setInputValue(goal);
+                        }}
+                        onGiveUp={() => window.location.reload()}
+                    />
+                    <div className="flex flex-col items-center gap-8">
+                        <div className="flex flex-col justify-center space-y-4 w-full">
+                            <div className="space-y-2 w-full">
+                                {!isGoalSet && (
+                                    <form onSubmit={handleGoalSubmit}>
+                                        <div className="flex items-center mb-4">
+                                            <input
+                                                className="block p-2.5 w-full z-20 text-sm text-white bg-gray-800 rounded-l-md border border-gray-600 focus:ring-green-500 focus:border-green-500"
+                                                type="text"
+                                                value={inputValue}
+                                                onChange={(e) => setInputValue(e.target.value)}
+                                                placeholder="ゴールを入力"
+                                            />
+                                            <Button
+                                                className="bg-green-500 hover:bg-green-600 text-white rounded-full w-10 h-10 flex items-center justify-center ml-2 transition duration-300 shadow-lg"
+                                                type="button"
+                                                onClick={fetchRandomWord}
+                                            >
+                                                <span>🎲</span>
+                                            </Button>
+                                            <Button
+                                                className="bg-green-600 hover:bg-green-700 text-white ml-2 transition duration-300 shadow-lg"
+                                                type="submit"
+                                            >
+                                                決定
+                                            </Button>
+                                        </div>
+                                    </form>
+                                )}
+
+                                {isGoalSet && (
+                                    <div className="flex items-center justify-between bg-gray-800 p-4 rounded-md shadow-md">
+                                        <p className="text-lg text-yellow-400 font-bold">ゴール: {goal}</p>
+                                    </div>
+                                )}
+
+                                {!isShotSet && isGoalSet && (
+                                    <form onSubmit={handleShotSubmit}>
+                                        <div className="flex items-center mb-4">
+                                            <input
+                                                className="block p-2.5 w-full z-20 text-sm text-white bg-gray-800 rounded-l-md border border-gray-600 focus:ring-green-500 focus:border-green-500"
+                                                type="text"
+                                                value={inputValue}
+                                                onChange={(e) => setInputValue(e.target.value)}
+                                                placeholder="ショットを入力"
+                                            />
+                                            <Button
+                                                className="bg-green-500 hover:bg-green-600 text-white rounded-full w-10 h-10 flex items-center justify-center ml-2 transition duration-300 shadow-lg"
+                                                type="button"
+                                                onClick={fetchRandomWord}
+                                            >
+                                                <span>🎲</span>
+                                            </Button>
+                                            <Button
+                                                className="bg-green-600 hover:bg-green-700 text-white ml-2 transition duration-300 shadow-lg"
+                                                type="submit"
+                                            >
+                                                ショット
+                                            </Button>
+                                            
+                                        </div>
+                                    </form>
+                                )}
+
+                                {goalAchieved && (
+                                    <div className="mt-4 p-4 bg-green-600 text-white rounded-md shadow-md">
+                                        <p className="text-lg font-bold">おめでとうございます！ゴールを達成しました！</p>
+                                    </div>
+                                )}
+
+                                <div className="mt-4">
+                                    <h2 className="text-lg text-white mb-2">ショット履歴</h2>
+                                    <div className="bg-gray-800 p-4 rounded-md shadow-md">
+                                        {shotHistory.length > 0 ? (
+                                            <ul className="list-disc list-inside text-white">
+                                                {shotHistory.map((shot, index) => (
+                                                    <li key={index} className="py-1">
+                                                        <span className="text-yellow-400 font-bold">{index + 1}.</span> {shot}
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        ) : (
+                                            <p className="text-gray-400">履歴はありません。</p>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <ul className="mt-4 text-lg text-white bg-gray-800 p-4 rounded-md">
+                                    {listWiki}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-
-                <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl lg:text-6xl/none text-green-400 dark:text-green-300">
-                  <span className=" text-gray-400"></span>{addText}
-                </h1>
-                <div className="flex gap-4">
-                <p className=" text-white ">
-                  <input id="input" className=" block p-2.5 w-full z-20 text-sm text-gray-900 bg-gray-50 rounded-e-lg rounded-s-gray-100 rounded-s-2 border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:border-blue-500" value={text} onChange={(event) => setText(event.target.value)} placeholder="太宰治"/>
-                </p>
-                
-                
-                  <Button 
-                    className="bg-green-400 hover:bg-green-500 text-black" 
-                    variant="default" 
-                    onClick={() => setFlag((start) => !start)}
-                  >
-                    shot
-                  </Button>
-                  <Button
-                    className="border-green-400 text-green-400 hover:bg-green-400 hover:text-black"
-                    variant="secondary"
-                    onClick={() => setRamdom((shot) => !shot)}
-                  >
-                    random
-                  </Button>
-                  
-                    
-
-                </div>
-                <ul className="max-w-[600px] text-gray-300 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed dark:text-gray-300">
-                    {listWiki}
-                  </ul>
-              </div>
-            </div>
-            
-          </div>
-        </div>
-      </section>
-      {/* <section className="w-full py-12 md:py-24 lg:py-32 bg-black dark:bg-gray-950">
-        <div className="container grid items-center justify-center gap-4 px-4 md:px-6 lg:gap-10">
-          <div className="space-y-3 text-center">
-            <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl text-green-400 dark:text-green-300">
-              Explore Our Enchanting Game Modes
-            </h2>
-            <p className="mx-auto max-w-[700px] text-gray-300 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed dark:text-gray-300">
-              Choose from a variety of whimsical game modes to suit your mood and skill level.
-            </p>
-          </div>
-          <div className="grid w-full grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            <Card className="bg-black dark:bg-gray-950 shadow-lg hover:shadow-xl transition-shadow">
-              <CardContent className="flex flex-col items-start gap-4">
-                <img
-                  alt="Enchanted Forest"
-                  className="aspect-[3/2] w-full overflow-hidden rounded-lg object-cover object-center"
-                  height="300"
-                  src="/placeholder.svg"
-                  width="450"
-                />
-                <div className="space-y-2">
-                  <h3 className="text-lg font-semibold text-green-400 dark:text-green-300">Enchanted Forest</h3>
-                  <p className="text-gray-300 dark:text-gray-300">
-                    Tee off amidst the whimsical trees and vibrant flora of our enchanted forest course.
-                  </p>
-                  <Button className="text-green-400 hover:text-green-500" variant="link">
-                    Play Now
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="bg-black dark:bg-gray-950 shadow-lg hover:shadow-xl transition-shadow">
-              <CardContent className="flex flex-col items-start gap-4">
-                <img
-                  alt="Fairy Tale Fairways"
-                  className="aspect-[3/2] w-full overflow-hidden rounded-lg object-cover object-center"
-                  height="300"
-                  src="/placeholder.svg"
-                  width="450"
-                />
-                <div className="space-y-2">
-                  <h3 className="text-lg font-semibold text-green-400 dark:text-green-300">Fairy Tale Fairways</h3>
-                  <p className="text-gray-300 dark:text-gray-300">
-                    Navigate through a whimsical course filled with enchanting obstacles and hidden surprises.
-                  </p>
-                  <Button className="text-green-400 hover:text-green-500" variant="link">
-                    Play Now
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="bg-black dark:bg-gray-950 shadow-lg hover:shadow-xl transition-shadow">
-              <CardContent className="flex flex-col items-start gap-4">
-                <img
-                  alt="Dreamscape Greens"
-                  className="aspect-[3/2] w-full overflow-hidden rounded-lg object-cover object-center"
-                  height="300"
-                  src="/placeholder.svg"
-                  width="450"
-                />
-                <div className="space-y-2">
-                  <h3 className="text-lg font-semibold text-green-400 dark:text-green-300">Dreamscape Greens</h3>
-                  <p className="text-gray-300 dark:text-gray-300">
-                    Lose yourself in the serene beauty of our dreamlike golf course, where reality and fantasy blend.
-                  </p>
-                  <Button className="text-green-400 hover:text-green-500" variant="link">
-                    Play Now
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </section>
-      <section className="w-full py-12 md:py-24 lg:py-32 bg-black dark:bg-gray-950">
-        <div className="container grid items-center justify-center gap-4 px-4 md:px-6 lg:gap-10">
-          <div className="space-y-3 text-center">
-            <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl text-green-400 dark:text-green-300">
-              Unwind and Recharge
-            </h2>
-            <p className="mx-auto max-w-[700px] text-gray-300 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed dark:text-gray-300">
-              Experience the tranquility of our nature-inspired golf course and let your worries melt away.
-            </p>
-          </div>
-          <div className="grid w-full grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            <Card className="bg-black dark:bg-gray-950 shadow-lg hover:shadow-xl transition-shadow">
-              <CardContent className="flex flex-col items-start gap-4">
-                <img
-                  alt="Relaxing Retreat"
-                  className="aspect-[3/2] w-full overflow-hidden rounded-lg object-cover object-center"
-                  height="300"
-                  src="/placeholder.svg"
-                  width="450"
-                />
-                <div className="space-y-2">
-                  <h3 className="text-lg font-semibold text-green-400 dark:text-green-300">Relaxing Retreat</h3>
-                  <p className="text-gray-300 dark:text-gray-300">
-                    Unwind and recharge on our serene, nature-inspired courses, where the only sounds are the gentle
-                    breeze and the chirping of birds.
-                  </p>
-                  <Button className="text-green-400 hover:text-green-500" variant="link">
-                    Learn More
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="bg-black dark:bg-gray-950 shadow-lg hover:shadow-xl transition-shadow">
-              <CardContent className="flex flex-col items-start gap-4">
-                <img
-                  alt="Mindful Moments"
-                  className="aspect-[3/2] w-full overflow-hidden rounded-lg object-cover object-center"
-                  height="300"
-                  src="/placeholder.svg"
-                  width="450"
-                />
-                <div className="space-y-2">
-                  <h3 className="text-lg font-semibold text-green-400 dark:text-green-300">Mindful Moments</h3>
-                  <p className="text-gray-300 dark:text-gray-300">
-                    Embrace the present moment and find inner peace as you navigate our calming, nature-inspired
-                    courses.
-                  </p>
-                  <Button className="text-green-400 hover:text-green-500" variant="link">
-                    Learn More
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="bg-black dark:bg-gray-950 shadow-lg hover:shadow-xl transition-shadow">
-              <CardContent className="flex flex-col items-start gap-4">
-                <img
-                  alt="Serene Sanctuary"
-                  className="aspect-[3/2] w-full overflow-hidden rounded-lg object-cover object-center"
-                  height="300"
-                  src="/placeholder.svg"
-                  width="450"
-                />
-                <div className="space-y-2">
-                  <h3 className="text-lg font-semibold text-green-400 dark:text-green-300">Serene Sanctuary</h3>
-                  <p className="text-gray-300 dark:text-gray-300">
-                    Escape the stresses of everyday life and find solace in the tranquil beauty of our nature-inspired
-                    golf courses.
-                  </p>
-                  <Button className="text-green-400 hover:text-green-500" variant="link">
-                    Learn More
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </section>
-      <footer className="bg-black text-white p-6 md:py-12 w-full">
-        <div className="container max-w-7xl grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-8 text-sm">
-          <div className="grid gap-1">
-            <h3 className="font-semibold">About</h3>
-            <Link className="hover:underline" href="#">
-              Our Story
-            </Link>
-            <Link className="hover:underline" href="#">
-              Our Team
-            </Link>
-            <Link className="hover:underline" href="#">
-              Careers
-            </Link>
-            <Link className="hover:underline" href="#">
-              Press
-            </Link>
-          </div>
-          <div className="grid gap-1">
-            <h3 className="font-semibold">Game Modes</h3>
-            <Link className="hover:underline" href="#">
-              Enchanted Forest
-            </Link>
-            <Link className="hover:underline" href="#">
-              Fairy Tale Fairways
-            </Link>
-            <Link className="hover:underline" href="#">
-              Dreamscape Greens
-            </Link>
-            <Link className="hover:underline" href="#">
-              Classic Mode
-            </Link>
-          </div>
-          <div className="grid gap-1">
-            <h3 className="font-semibold">Resources</h3>
-            <Link className="hover:underline" href="#">
-              Blog
-            </Link>
-            <Link className="hover:underline" href="#">
-              Community
-            </Link>
-            <Link className="hover:underline" href="#">
-              Support
-            </Link>
-            <Link className="hover:underline" href="#">
-              FAQs
-            </Link>
-          </div>
-          <div className="grid gap-1">
-            <h3 className="font-semibold">Legal</h3>
-            <Link className="hover:underline" href="#">
-              Privacy Policy
-            </Link>
-            <Link className="hover:underline" href="#">
-              Terms of Service
-            </Link>
-            <Link className="hover:underline" href="#">
-              Cookie Policy
-            </Link>
-          </div>
-          <div className="grid gap-1">
-            <h3 className="font-semibold">Contact</h3>
-            <Link className="hover:underline" href="#">
-              Support
-            </Link>
-            <Link className="hover:underline" href="#">
-              Sales
-            </Link>
-            <Link className="hover:underline" href="#">
-              Partnerships
-            </Link>
-          </div>
-        </div>
-      </footer> */}
-    </>
-    
-    </>
-  );
-  
+            </section>
+        </>
+    );
 }
