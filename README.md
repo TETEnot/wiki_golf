@@ -11,7 +11,7 @@ Wikiゴルフは、Wikipediaを利用してゴルフを楽しむことができ�
 ## インストール手順
 1. リポジトリをクローンします。
    ```bash
-   git clone https://github.com/username/repository.git
+   git clone https://github.com/TETEnot/wiki_golf
    ```
 2. プロジェクトディレクトリに移動します。
    ```bash
